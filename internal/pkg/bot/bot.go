@@ -1,41 +1,47 @@
-package commander
+package bot
 
 import (
 	"fmt"
 	"log"
+	"tasks/internal/config"
+	commandPkg "tasks/internal/pkg/bot/command"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/pkg/errors"
-	"tasks/internal/config"
 )
 
 type CmdHandler func(string) string
 
-type Commander struct {
-	bot   *tgbotapi.BotAPI
-	route map[string]CmdHandler
+type Interface interface {
+	Run() error
+	RegisterHandler(cmd commandPkg.Interface)
 }
 
-func Init() (*Commander, error) {
-	bot, err := tgbotapi.NewBotAPI(config.ApiKey)
+func MustNew() Interface {
+	bot, err := tgbotapi.NewBotAPI(config.Config.Telegram.ApiKey)
 	if err != nil {
-		return nil, errors.Wrap(err, "init tgbot")
+		log.Panic(errors.Wrap(err, "init tgbot"))
 	}
 
 	bot.Debug = true
 	log.Printf("Authorized on account %s", bot.Self.UserName)
 
-	return &Commander{
+	return &commander{
 		bot:   bot,
-		route: make(map[string]CmdHandler),
-	}, nil
+		route: make(map[string]commandPkg.Interface),
+	}
 }
 
-func (c *Commander) RegisterHandler(cmd string, f CmdHandler) {
-	c.route[cmd] = f
+type commander struct {
+	bot   *tgbotapi.BotAPI
+	route map[string]commandPkg.Interface
 }
 
-func (c *Commander) Run() error {
+func (c *commander) RegisterHandler(cmd commandPkg.Interface) {
+	c.route[cmd.Name()] = cmd
+}
+
+func (c *commander) Run() error {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := c.bot.GetUpdatesChan(u)
@@ -45,9 +51,9 @@ func (c *Commander) Run() error {
 			continue
 		}
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "")
-		if cmd := update.Message.Command(); cmd != "" {
-			if f, ok := c.route[cmd]; ok {
-				msg.Text = f(update.Message.CommandArguments())
+		if cmdName := update.Message.Command(); cmdName != "" {
+			if cmd, ok := c.route[cmdName]; ok {
+				msg.Text = cmd.Process(update.Message.CommandArguments())
 			} else {
 				msg.Text = "Unknown command"
 			}

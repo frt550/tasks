@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package tasks.api;
+option go_package = "tasks/pkg/api;api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service Admin {
+  rpc TaskCreate(TaskCreateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/task"
+      body: "*"
+    };
+  }
+  rpc TaskRead(TaskReadRequest) returns (TaskReadResponse) {
+    option (google.api.http) = {
+      get: "/v1/task"
+    };
+  }
+  rpc TaskUpdate(TaskUpdateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      put: "/v1/task"
+      body: "*"
+    };
+
+  }
+  rpc TaskDelete(TaskDeleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/task"
+      body: "*"
+    };
+  }
+  rpc TaskList(TaskListRequest) returns (TaskListResponse) {
+    option (google.api.http) = {
+      get: "/v1/tasks"
+    };
+  }
+}
+
+message Task {
+  uint64  id           = 1;
+  string  title        = 2;
+  bool    isCompleted  = 3;
+  string  CreatedAt    = 4;
+  string  CompletedAt  = 5;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskCreate endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskCreateRequest {
+  string title = 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskRead endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskReadRequest {
+  uint64 id = 1;
+}
+message TaskReadResponse {
+  Task task = 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskUpdate endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskUpdateRequest {
+  uint64 id     = 1;
+  string title  = 2;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskDelete endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskDeleteRequest {
+  uint64 id = 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskList endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskListRequest {}
+message TaskListResponse {
+  repeated Task tasks = 1;
+}
