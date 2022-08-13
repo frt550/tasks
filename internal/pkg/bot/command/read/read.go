@@ -1,14 +1,13 @@
 package read
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	commandPkg "tasks/internal/pkg/bot/command"
 	taskPkg "tasks/internal/pkg/core/task"
-	"tasks/internal/pkg/core/task/cache/local"
+	taskErr "tasks/internal/pkg/core/task/error"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -30,19 +29,20 @@ func (c *command) Description() string {
 }
 
 func (c *command) Process(args string) string {
+	ctx := context.Background()
 	id, err := strconv.Atoi(args)
 	if err != nil {
 		return "Please, enter a valid task id"
 	}
 
-	task, err := c.task.Get(uint(id))
-	if errors.Is(err, local.ErrTaskNotExists) {
-		return fmt.Sprintf("Sorry, task #%d is not found", id)
+	task, err := c.task.Get(ctx, uint(id))
+	if err != nil {
+		return taskErr.Error(err)
 	}
 
 	isCompleted := ""
 	if task.IsCompleted {
-		isCompleted = "It is completed at " + task.CompletedAt.Format(time.RFC850)
+		isCompleted = "It is completed at " + task.CompletedAt.Time.Format(time.RFC850)
 	} else {
 		isCompleted = "It is not completed yet"
 	}

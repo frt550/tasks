@@ -1,9 +1,11 @@
 package show
 
 import (
+	"context"
 	"strings"
 	commandPkg "tasks/internal/pkg/bot/command"
 	taskPkg "tasks/internal/pkg/core/task"
+	taskErr "tasks/internal/pkg/core/task/error"
 	"tasks/internal/pkg/core/task/models"
 )
 
@@ -28,7 +30,10 @@ func (c *command) Description() string {
 }
 
 func (c *command) Process(args string) string {
-	var allTasks = c.task.List()
+	var allTasks, err = c.task.All(context.Background(), 0, 0)
+	if err != nil {
+		taskErr.Error(err)
+	}
 	var pendingTasks = make([]models.Task, 0, len(allTasks))
 	var completedTasks = make([]models.Task, 0, len(allTasks))
 
