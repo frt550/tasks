@@ -4,7 +4,6 @@ import (
 	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/emptypb"
 	taskPkg "tasks/internal/pkg/core/task"
 	"tasks/internal/pkg/core/task/models"
 	pb "tasks/pkg/api"
@@ -22,61 +21,67 @@ type implementation struct {
 	task taskPkg.Interface
 }
 
-func (i *implementation) TaskCreate(_ context.Context, in *pb.TaskCreateRequest) (*emptypb.Empty, error) {
-	if err := i.task.Create(models.Task{
-		Title: in.GetTitle(),
-	}); err != nil {
+func (i *implementation) TaskCreate(ctx context.Context, in *pb.TaskCreateRequest) (*pb.TaskResponse, error) {
+	if task, err := i.task.Create(ctx, in.GetTitle()); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createTaskResponse(task), nil
 	}
-	return &emptypb.Empty{}, nil
 }
 
-func (i *implementation) TaskRead(_ context.Context, in *pb.TaskReadRequest) (*pb.TaskReadResponse, error) {
-	task, err := i.task.Get(uint(in.GetId()))
+func (i *implementation) TaskGet(ctx context.Context, in *pb.TaskGetRequest) (*pb.TaskResponse, error) {
+	task, err := i.task.Get(ctx, uint(in.GetId()))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createTaskResponse(task), nil
+	}
+}
+
+func (i *implementation) TaskUpdate(ctx context.Context, in *pb.TaskUpdateRequest) (*pb.TaskResponse, error) {
+	if task, err := i.task.UpdateTitle(ctx, uint(in.GetId()), in.GetTitle()); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createTaskResponse(task), nil
+	}
+}
+
+func (i *implementation) TaskDelete(ctx context.Context, in *pb.TaskDeleteRequest) (*pb.TaskResponse, error) {
+	if task, err := i.task.Delete(ctx, uint(in.GetId())); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createTaskResponse(task), nil
+	}
+}
+
+func (i *implementation) TaskComplete(ctx context.Context, in *pb.TaskCompleteRequest) (*pb.TaskResponse, error) {
+	if task, err := i.task.Complete(ctx, uint(in.GetId())); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createTaskResponse(task), nil
+	}
+}
+
+func (i *implementation) TaskAll(ctx context.Context, in *pb.TaskAllRequest) (*pb.TaskAllResponse, error) {
+	tasks, err := i.task.All(ctx, in.Limit, in.Offset)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	result := &pb.Task{
+	taskResponses := make([]*pb.TaskResponse, 0, len(tasks))
+	for _, task := range tasks {
+		taskResponses = append(taskResponses, createTaskResponse(&task))
+	}
+	return &pb.TaskAllResponse{
+		Tasks: taskResponses,
+	}, nil
+}
+
+func createTaskResponse(task *models.Task) *pb.TaskResponse {
+	return &pb.TaskResponse{
 		Id:          uint64(task.Id),
 		Title:       task.Title,
 		IsCompleted: task.IsCompleted,
 		CreatedAt:   task.CreatedAt.Format(time.RFC850),
-		CompletedAt: task.CompletedAt.Format(time.RFC850),
+		CompletedAt: task.CompletedAt.Time.Format(time.RFC850),
 	}
-	return &pb.TaskReadResponse{
-		Task: result,
-	}, nil
-}
-
-func (i *implementation) TaskUpdate(_ context.Context, in *pb.TaskUpdateRequest) (*emptypb.Empty, error) {
-	if err := i.task.Update(models.Task{
-		Title: in.GetTitle(),
-	}); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (i *implementation) TaskDelete(_ context.Context, in *pb.TaskDeleteRequest) (*emptypb.Empty, error) {
-	if err := i.task.Delete(uint(in.GetId())); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (i *implementation) TaskList(_ context.Context, _ *pb.TaskListRequest) (*pb.TaskListResponse, error) {
-	tasks := i.task.List()
-	result := make([]*pb.Task, 0, len(tasks))
-	for _, task := range tasks {
-		result = append(result, &pb.Task{
-			Id:          uint64(task.Id),
-			Title:       task.Title,
-			IsCompleted: task.IsCompleted,
-			CreatedAt:   task.CreatedAt.Format(time.RFC850),
-			CompletedAt: task.CompletedAt.Format(time.RFC850),
-		})
-	}
-	return &pb.TaskListResponse{
-		Tasks: result,
-	}, nil
 }

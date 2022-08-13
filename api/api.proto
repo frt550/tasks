@@ -7,38 +7,43 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 service Admin {
-  rpc TaskCreate(TaskCreateRequest) returns (google.protobuf.Empty) {
+  rpc TaskCreate(TaskCreateRequest) returns (TaskResponse) {
     option (google.api.http) = {
       post: "/v1/task"
       body: "*"
     };
   }
-  rpc TaskRead(TaskReadRequest) returns (TaskReadResponse) {
+  rpc TaskGet(TaskGetRequest) returns (TaskResponse) {
     option (google.api.http) = {
       get: "/v1/task"
     };
   }
-  rpc TaskUpdate(TaskUpdateRequest) returns (google.protobuf.Empty) {
+  rpc TaskUpdate(TaskUpdateRequest) returns (TaskResponse) {
     option (google.api.http) = {
-      put: "/v1/task"
+      put: "/v1/title"
       body: "*"
     };
-
   }
-  rpc TaskDelete(TaskDeleteRequest) returns (google.protobuf.Empty) {
+  rpc TaskDelete(TaskDeleteRequest) returns (TaskResponse) {
     option (google.api.http) = {
       delete: "/v1/task"
       body: "*"
     };
   }
-  rpc TaskList(TaskListRequest) returns (TaskListResponse) {
+  rpc TaskAll(TaskAllRequest) returns (TaskAllResponse) {
     option (google.api.http) = {
       get: "/v1/tasks"
     };
   }
+  rpc TaskComplete(TaskCompleteRequest) returns (TaskResponse) {
+    option (google.api.http) = {
+      put: "/v1/complete"
+      body: "*"
+    };
+  }
 }
 
-message Task {
+message TaskResponse {
   uint64  id           = 1;
   string  title        = 2;
   bool    isCompleted  = 3;
@@ -54,13 +59,10 @@ message TaskCreateRequest {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// TaskRead endpoint messages
+// TaskGet endpoint messages
 // ---------------------------------------------------------------------------------------------------------------------
-message TaskReadRequest {
+message TaskGetRequest {
   uint64 id = 1;
-}
-message TaskReadResponse {
-  Task task = 1;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -79,9 +81,19 @@ message TaskDeleteRequest {
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// TaskList endpoint messages
+// TaskAll endpoint messages
 // ---------------------------------------------------------------------------------------------------------------------
-message TaskListRequest {}
-message TaskListResponse {
-  repeated Task tasks = 1;
+message TaskAllRequest {
+  uint64 limit = 1;
+  uint64 offset = 2;
+}
+message TaskAllResponse {
+  repeated TaskResponse tasks = 1;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TaskComplete endpoint messages
+// ---------------------------------------------------------------------------------------------------------------------
+message TaskCompleteRequest {
+  uint64 id = 1;
 }

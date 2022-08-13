@@ -3,8 +3,10 @@ package local
 import (
 	"context"
 	"sync"
-	cachePkg "tasks/internal/pkg/core/task/cache"
+	"tasks/internal/pkg/core/counter"
+	taskErr "tasks/internal/pkg/core/task/error"
 	"tasks/internal/pkg/core/task/models"
+	storagePkg "tasks/internal/pkg/core/task/repository"
 	"time"
 
 	"github.com/pkg/errors"
@@ -13,12 +15,7 @@ import (
 const poolSize = 10
 const shortDuration = 10 * time.Millisecond
 
-var (
-	ErrTaskNotExists = errors.New("Task does not exist")
-	ErrTaskExists    = errors.New("Task already exists")
-)
-
-func New() cachePkg.Interface {
+func New() storagePkg.Interface {
 	return &cache{
 		mu:     sync.RWMutex{},
 		data:   map[uint]models.Task{},
@@ -32,7 +29,7 @@ type cache struct {
 	poolCh chan struct{}
 }
 
-func (c *cache) List() []models.Task {
+func (c *cache) FindAll(_ context.Context, _, _ uint64) ([]models.Task, error) {
 	c.poolCh <- struct{}{}
 	c.mu.RLock()
 	defer func() {
@@ -44,10 +41,10 @@ func (c *cache) List() []models.Task {
 	for _, value := range c.data {
 		result = append(result, value)
 	}
-	return result
+	return result, nil
 }
 
-func (c *cache) Add(task models.Task) error {
+func (c *cache) Insert(_ context.Context, task *models.Task) error {
 	c.poolCh <- struct{}{}
 	c.mu.Lock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -57,14 +54,15 @@ func (c *cache) Add(task models.Task) error {
 		cancel()
 	}()
 
+	task.Id = counter.GetId()
 	if _, ok := c.data[task.Id]; ok {
-		return errors.Wrapf(ErrTaskExists, "task-id: [%d]", task.Id)
+		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is already exists", task.Id)
 	}
-	c.data[task.Id] = task
+	c.data[task.Id] = *task
 	return nil
 }
 
-func (c *cache) Update(task models.Task) error {
+func (c *cache) Update(_ context.Context, task *models.Task) error {
 	c.poolCh <- struct{}{}
 	c.mu.Lock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -75,13 +73,13 @@ func (c *cache) Update(task models.Task) error {
 	}()
 
 	if _, ok := c.data[task.Id]; !ok {
-		return errors.Wrapf(ErrTaskNotExists, "task-id: [%d]", task.Id)
+		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", task.Id)
 	}
-	c.data[task.Id] = task
+	c.data[task.Id] = *task
 	return nil
 }
 
-func (c *cache) Delete(id uint) error {
+func (c *cache) DeleteById(_ context.Context, id uint) error {
 	c.poolCh <- struct{}{}
 	c.mu.Lock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -92,13 +90,13 @@ func (c *cache) Delete(id uint) error {
 	}()
 
 	if _, ok := c.data[id]; !ok {
-		return errors.Wrapf(ErrTaskNotExists, "task-id: [%d]", id)
+		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", id)
 	}
 	delete(c.data, id)
 	return nil
 }
 
-func (c *cache) Get(id uint) (models.Task, error) {
+func (c *cache) FindOneById(_ context.Context, id uint) (models.Task, error) {
 	c.poolCh <- struct{}{}
 	c.mu.RLock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -109,7 +107,7 @@ func (c *cache) Get(id uint) (models.Task, error) {
 	}()
 
 	if _, ok := c.data[id]; !ok {
-		return models.Task{}, errors.Wrapf(ErrTaskNotExists, "task-id: [%d]", id)
+		return models.Task{}, errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", id)
 	}
 	return c.data[id], nil
 }

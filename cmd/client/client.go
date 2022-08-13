@@ -19,7 +19,7 @@ func main() {
 	client := pb.NewAdminClient(conns)
 
 	ctx := context.Background()
-	response, err := client.TaskList(ctx, &pb.TaskListRequest{})
+	response, err := client.TaskAll(ctx, &pb.TaskAllRequest{})
 	if err != nil {
 		panic(err)
 	}

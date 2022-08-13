@@ -1,12 +1,18 @@
 # Tasks
 
-Telegram bot username: fb_TasksBot
-
 How to run:
-1. go mod install
-2. buf generate
-3. go run cmd/bot/main.go (or cmd/grpc/main.go or cmd/rest/main.go)
+1. `go mod install` to download modules
+2. `buf generate` to generate code for grpc/rest api by .proto files 
+3. `docker-compose up` to start db
+4. ./migrate.sh to apply migrations
+5. make `run-tg` to run telegram bot api
+   - or make `run-grpc` to run grpc api
+   - or `make run-grpc` and `make run-rest` to run rest api
 
+Other commands:
+- `make .deps` to generate protoc binaries
+- `make run-client` to run client
+- `make migration NAME=your_name_here` to create migration with specified name
 
-Commands:
-- make .deps - to generate protoc binaries
+Some info:
+- Telegram bot username `fb_TasksBot`

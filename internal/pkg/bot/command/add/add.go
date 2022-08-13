@@ -1,14 +1,11 @@
 package add
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"strings"
 	commandPkg "tasks/internal/pkg/bot/command"
-	"tasks/internal/pkg/core/counter"
 	taskPkg "tasks/internal/pkg/core/task"
-	"tasks/internal/pkg/core/task/models"
-	"time"
+	taskErr "tasks/internal/pkg/core/task/error"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -30,20 +27,11 @@ func (c *command) Description() string {
 }
 
 func (c *command) Process(args string) string {
-	var title = strings.TrimSpace(args)
-	if len(title) == 0 {
-		return "Title cannot be empty"
-	}
-	var taskModel = models.Task{
-		Id:          counter.GetId(),
-		Title:       strings.TrimSpace(args),
-		IsCompleted: false,
-		CreatedAt:   time.Now(),
-	}
+	ctx := context.Background()
 
-	if err := c.task.Create(taskModel); err != nil {
-		log.Println(err)
-		return "Internal error"
+	if task, err := c.task.Create(ctx, args); err != nil {
+		return taskErr.Error(err)
+	} else {
+		return fmt.Sprintf("Task %v is added", task)
 	}
-	return fmt.Sprintf("Task %v is added", taskModel)
 }

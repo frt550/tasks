@@ -1,15 +1,13 @@
 package update
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	commandPkg "tasks/internal/pkg/bot/command"
 	taskPkg "tasks/internal/pkg/core/task"
-	"tasks/internal/pkg/core/task/cache/local"
-
-	"github.com/pkg/errors"
+	taskErr "tasks/internal/pkg/core/task/error"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -40,24 +38,10 @@ func (c *command) Process(args string) string {
 	if len(params) >= 2 {
 		title = strings.Join(params[1:], " ")
 	}
-	if len(title) == 0 {
-		return "Title cannot be empty"
-	}
 
-	task, err := c.task.Get(uint(id))
-	if errors.Is(err, local.ErrTaskNotExists) {
-		return fmt.Sprintf("Sorry, task #%d is not found", id)
+	if task, err := c.task.UpdateTitle(context.Background(), uint(id), title); err != nil {
+		return taskErr.Error(err)
+	} else {
+		return fmt.Sprintf("Task #%d is updated to %s", task.Id, task.Title)
 	}
-	if task.IsCompleted {
-		return "Completed task cannot be updated"
-	}
-
-	task.Title = title
-	err = c.task.Update(task)
-	if err != nil {
-		log.Println(err)
-		return "Internal error"
-	}
-
-	return fmt.Sprintf("Task #%d is updated to %s", task.Id, task.Title)
 }
