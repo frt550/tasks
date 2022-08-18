@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"tasks/internal/config"
-	pb "tasks/pkg/api"
+	pb "tasks/pkg/api/backup"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -27,11 +27,11 @@ func runREST() {
 		panic(err)
 	}
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	if err := pb.RegisterAdminHandlerFromEndpoint(ctx, mux, config.Config.Grpc.ServerAddress, opts); err != nil {
+	if err := pb.RegisterAdminHandlerFromEndpoint(ctx, mux, config.Config.Backup.Grpc.ServerAddress, opts); err != nil {
 		panic(err)
 	}
 
-	if err := http.ListenAndServe(config.Config.Rest.ServerAddress, mux); err != nil {
+	if err := http.ListenAndServe(config.Config.Backup.Rest.ServerAddress, mux); err != nil {
 		panic(err)
 	}
 }

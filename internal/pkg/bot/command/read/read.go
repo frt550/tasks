@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	commandPkg "tasks/internal/pkg/bot/command"
+	errPkg "tasks/internal/pkg/core/error"
 	taskPkg "tasks/internal/pkg/core/task"
-	taskErr "tasks/internal/pkg/core/task/error"
 	"time"
 )
 
@@ -37,7 +37,7 @@ func (c *command) Process(args string) string {
 
 	task, err := c.task.Get(ctx, uint(id))
 	if err != nil {
-		return taskErr.Error(err)
+		return errPkg.Error(err)
 	}
 
 	isCompleted := ""

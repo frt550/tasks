@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 	commandPkg "tasks/internal/pkg/bot/command"
+	errPkg "tasks/internal/pkg/core/error"
 	taskPkg "tasks/internal/pkg/core/task"
-	taskErr "tasks/internal/pkg/core/task/error"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -40,7 +40,7 @@ func (c *command) Process(args string) string {
 	}
 
 	if task, err := c.task.UpdateTitle(context.Background(), uint(id), title); err != nil {
-		return taskErr.Error(err)
+		return errPkg.Error(err)
 	} else {
 		return fmt.Sprintf("Task #%d is updated to %s", task.Id, task.Title)
 	}

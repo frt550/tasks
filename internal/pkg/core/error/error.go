@@ -9,10 +9,10 @@ import (
 
 const messageInternalError = "Internal error"
 
-var TaskError = errors.New("")
+var DomainError = errors.New("")
 
 func Error(err error) string {
-	if errors.Is(err, TaskError) {
+	if errors.Is(err, DomainError) {
 		return err.Error()
 	} else {
 		if config.Config.App.Debug == "true" {

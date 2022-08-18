@@ -4,14 +4,14 @@ import (
 	"context"
 	"log"
 	"tasks/internal/config"
-	pb "tasks/pkg/api"
+	pb "tasks/pkg/api/task"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	conns, err := grpc.Dial(config.Config.Grpc.ClientTarget, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conns, err := grpc.Dial(config.Config.Task.Grpc.ClientTarget, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		panic(err)
 	}

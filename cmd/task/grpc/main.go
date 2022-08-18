@@ -2,10 +2,10 @@ package main
 
 import (
 	"net"
-	apiPkg "tasks/internal/api"
+	apiPkg "tasks/internal/api/task"
 	"tasks/internal/config"
 	taskPkg "tasks/internal/pkg/core/task"
-	pb "tasks/pkg/api"
+	pb "tasks/pkg/api/task"
 
 	"google.golang.org/grpc"
 )
@@ -16,7 +16,7 @@ func main() {
 }
 
 func runGRPCServer(task taskPkg.Interface) {
-	listener, err := net.Listen(config.Config.Grpc.ServerNetwork, config.Config.Grpc.ServerAddress)
+	listener, err := net.Listen(config.Config.Task.Grpc.ServerNetwork, config.Config.Task.Grpc.ServerAddress)
 	if err != nil {
 		panic(err)
 	}

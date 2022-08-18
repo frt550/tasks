@@ -1,11 +1,9 @@
 run-tg:
 	go run cmd/bot/main.go
-run-grpc:
-	go run cmd/grpc/main.go
-run-rest:
-	go run cmd/rest/main.go
-run-client:
-	go run cmd/client/main.go
+run-task:
+	go run cmd/task/grpc/main.go & go run cmd/task/rest/main.go
+run-backup:
+	go run cmd/backup/grpc/main.go & go run cmd/backup/rest/main.go
 
 LOCAL_BIN:=$(CURDIR)/bin
 .PHONY: .deps

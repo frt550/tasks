@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 	"tasks/internal/pkg/core/counter"
-	taskErr "tasks/internal/pkg/core/task/error"
+	errPkg "tasks/internal/pkg/core/error"
 	"tasks/internal/pkg/core/task/models"
 	storagePkg "tasks/internal/pkg/core/task/repository"
 	"time"
@@ -56,7 +56,7 @@ func (c *cache) Insert(_ context.Context, task *models.Task) error {
 
 	task.Id = counter.GetId()
 	if _, ok := c.data[task.Id]; ok {
-		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is already exists", task.Id)
+		return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is already exists", task.Id)
 	}
 	c.data[task.Id] = *task
 	return nil
@@ -73,7 +73,7 @@ func (c *cache) Update(_ context.Context, task *models.Task) error {
 	}()
 
 	if _, ok := c.data[task.Id]; !ok {
-		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", task.Id)
+		return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", task.Id)
 	}
 	c.data[task.Id] = *task
 	return nil
@@ -90,7 +90,7 @@ func (c *cache) DeleteById(_ context.Context, id uint) error {
 	}()
 
 	if _, ok := c.data[id]; !ok {
-		return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", id)
+		return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 	}
 	delete(c.data, id)
 	return nil
@@ -107,7 +107,7 @@ func (c *cache) FindOneById(_ context.Context, id uint) (models.Task, error) {
 	}()
 
 	if _, ok := c.data[id]; !ok {
-		return models.Task{}, errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", id)
+		return models.Task{}, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 	}
 	return c.data[id], nil
 }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tasks.api;
+package tasks.api.task;
 option go_package = "tasks/pkg/api;api";
 
 import "google/api/annotations.proto";
@@ -44,11 +44,11 @@ service Admin {
 }
 
 message TaskResponse {
-  uint64  id           = 1;
-  string  title        = 2;
-  bool    isCompleted  = 3;
-  string  CreatedAt    = 4;
-  string  CompletedAt  = 5;
+  uint64  id            = 1;
+  string  title         = 2;
+  bool    is_completed  = 3;
+  string  created_at    = 4;
+  string  completed_at  = 5;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

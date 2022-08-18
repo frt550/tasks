@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE IF NOT EXISTS public.task (
+CREATE TABLE public.task (
     id serial PRIMARY KEY,
     title varchar(255) NOT NULL,
     is_completed boolean DEFAULT false NOT NULL,
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS public.task (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS public.task;
+DROP TABLE public.task;
 -- +goose StatementEnd

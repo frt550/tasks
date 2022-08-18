@@ -3,8 +3,8 @@ package postgres
 import (
 	"context"
 	"fmt"
+	errPkg "tasks/internal/pkg/core/error"
 	"tasks/internal/pkg/core/pool"
-	taskErr "tasks/internal/pkg/core/task/error"
 	"tasks/internal/pkg/core/task/models"
 	storagePkg "tasks/internal/pkg/core/task/repository"
 
@@ -92,7 +92,7 @@ func (r *repository) Update(ctx context.Context, task *models.Task) error {
 		return fmt.Errorf("Repository.UpdateTitle: exec: %w", err)
 	} else {
 		if ct.RowsAffected() == 0 {
-			return errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", task.Id)
+			return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", task.Id)
 		} else {
 			return nil
 		}
@@ -131,7 +131,7 @@ func (r *repository) FindOneById(ctx context.Context, id uint) (models.Task, err
 	var result models.Task
 	if err := pgxscan.Get(ctx, r.pool, &result, sql, args...); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.Task{}, errors.Wrapf(taskErr.TaskError, "Sorry, task #%d is not found", id)
+			return models.Task{}, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 		} else {
 			return models.Task{}, fmt.Errorf("Repository.FindOneById: select: %w", err)
 		}

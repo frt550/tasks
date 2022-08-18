@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package tasks.api.backup;
+option go_package = "tasks/pkg/api;api";
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+service Admin {
+  rpc BackupCreate(google.protobuf.Empty) returns (BackupResponse) {
+    option (google.api.http) = {
+      post: "/v1/backup"
+      body: "*"
+    };
+  }
+}
+
+message BackupResponse {
+  uint64  id            = 1;
+  string  data          = 2;
+  string  created_at    = 3;
+}
