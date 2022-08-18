@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	commandPkg "tasks/internal/pkg/bot/command"
+	errPkg "tasks/internal/pkg/core/error"
 	taskPkg "tasks/internal/pkg/core/task"
-	taskErr "tasks/internal/pkg/core/task/error"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -35,7 +35,7 @@ func (c *command) Process(args string) string {
 	}
 
 	if task, err := c.task.Complete(ctx, uint(id)); err != nil {
-		return taskErr.Error(err)
+		return errPkg.Error(err)
 	} else {
 		return fmt.Sprintf("Task %v is completed", task)
 	}

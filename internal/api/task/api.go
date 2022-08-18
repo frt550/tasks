@@ -5,8 +5,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	taskPkg "tasks/internal/pkg/core/task"
-	"tasks/internal/pkg/core/task/models"
-	pb "tasks/pkg/api"
+	taskModelPkg "tasks/internal/pkg/core/task/models"
+	pb "tasks/pkg/api/task"
 	"time"
 )
 
@@ -76,7 +76,7 @@ func (i *implementation) TaskAll(ctx context.Context, in *pb.TaskAllRequest) (*p
 	}, nil
 }
 
-func createTaskResponse(task *models.Task) *pb.TaskResponse {
+func createTaskResponse(task *taskModelPkg.Task) *pb.TaskResponse {
 	return &pb.TaskResponse{
 		Id:          uint64(task.Id),
 		Title:       task.Title,

@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	errPkg "tasks/internal/pkg/core/error"
 	"tasks/internal/pkg/core/task/models"
 	"tasks/internal/pkg/core/task/repository"
 	"tasks/internal/pkg/core/task/repository/postgres"
 	"time"
 
 	"github.com/pkg/errors"
-
-	taskErr "tasks/internal/pkg/core/task/error"
 
 	"golang.org/x/net/context"
 )
@@ -38,7 +37,7 @@ type core struct {
 func (c *core) Create(ctx context.Context, title string) (*models.Task, error) {
 	title = strings.TrimSpace(title)
 	if len(title) == 0 {
-		return nil, errors.Wrap(taskErr.TaskError, "Title cannot be empty")
+		return nil, errors.Wrap(errPkg.DomainError, "Title cannot be empty")
 	}
 	var task = &models.Task{
 		Title:       title,
@@ -54,7 +53,7 @@ func (c *core) Create(ctx context.Context, title string) (*models.Task, error) {
 
 func (c *core) UpdateTitle(ctx context.Context, id uint, title string) (*models.Task, error) {
 	if len(title) == 0 {
-		return nil, errors.Wrap(taskErr.TaskError, "Title cannot be empty")
+		return nil, errors.Wrap(errPkg.DomainError, "Title cannot be empty")
 	}
 
 	task, err := c.repository.FindOneById(ctx, id)
@@ -63,7 +62,7 @@ func (c *core) UpdateTitle(ctx context.Context, id uint, title string) (*models.
 	}
 
 	if task.IsCompleted {
-		return nil, errors.Wrap(taskErr.TaskError, "Completed task cannot be updated")
+		return nil, errors.Wrap(errPkg.DomainError, "Completed task cannot be updated")
 	}
 
 	task.Title = title
@@ -90,7 +89,7 @@ func (c *core) Complete(ctx context.Context, id uint) (*models.Task, error) {
 		return nil, err
 	}
 	if task.IsCompleted {
-		return nil, errors.Wrap(taskErr.TaskError, fmt.Sprintf("Task %v is already completed", task))
+		return nil, errors.Wrap(errPkg.DomainError, fmt.Sprintf("Task %v is already completed", task))
 	}
 
 	task.IsCompleted = true

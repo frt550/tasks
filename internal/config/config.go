@@ -13,13 +13,25 @@ type config struct {
 	Telegram struct {
 		ApiKey string
 	}
-	Grpc struct {
-		ServerNetwork string
-		ServerAddress string
-		ClientTarget  string
+	Task struct {
+		Grpc struct {
+			ServerNetwork string
+			ServerAddress string
+			ClientTarget  string
+		}
+		Rest struct {
+			ServerAddress string
+		}
 	}
-	Rest struct {
-		ServerAddress string
+	Backup struct {
+		Grpc struct {
+			ServerNetwork string
+			ServerAddress string
+			ClientTarget  string
+		}
+		Rest struct {
+			ServerAddress string
+		}
 	}
 	Db struct {
 		Host     string
@@ -45,20 +57,32 @@ func init() {
 		Config.Telegram.ApiKey = val
 	})
 
-	// GRPC
-	loadEnv("GRPC_SERVER_NETWORK", func(val string) {
-		Config.Grpc.ServerNetwork = val
+	// TASK
+	loadEnv("TASK_GRPC_SERVER_NETWORK", func(val string) {
+		Config.Task.Grpc.ServerNetwork = val
 	})
-	loadEnv("GRPC_SERVER_ADDRESS", func(val string) {
-		Config.Grpc.ServerAddress = val
+	loadEnv("TASK_GRPC_SERVER_ADDRESS", func(val string) {
+		Config.Task.Grpc.ServerAddress = val
 	})
-	loadEnv("GRPC_CLIENT_TARGET", func(val string) {
-		Config.Grpc.ClientTarget = val
+	loadEnv("TASK_GRPC_CLIENT_TARGET", func(val string) {
+		Config.Task.Grpc.ClientTarget = val
+	})
+	loadEnv("TASK_REST_SERVER_ADDRESS", func(val string) {
+		Config.Task.Rest.ServerAddress = val
 	})
 
-	// REST
-	loadEnv("REST_SERVER_ADDRESS", func(val string) {
-		Config.Rest.ServerAddress = val
+	// BACKUP
+	loadEnv("BACKUP_GRPC_SERVER_NETWORK", func(val string) {
+		Config.Backup.Grpc.ServerNetwork = val
+	})
+	loadEnv("BACKUP_GRPC_SERVER_ADDRESS", func(val string) {
+		Config.Backup.Grpc.ServerAddress = val
+	})
+	loadEnv("BACKUP_GRPC_CLIENT_TARGET", func(val string) {
+		Config.Backup.Grpc.ClientTarget = val
+	})
+	loadEnv("BACKUP_REST_SERVER_ADDRESS", func(val string) {
+		Config.Backup.Rest.ServerAddress = val
 	})
 
 	// DB
