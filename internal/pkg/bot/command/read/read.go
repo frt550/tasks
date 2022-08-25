@@ -7,7 +7,6 @@ import (
 	commandPkg "tasks/internal/pkg/bot/command"
 	errPkg "tasks/internal/pkg/core/error"
 	taskPkg "tasks/internal/pkg/core/task"
-	"time"
 )
 
 func New(task taskPkg.Interface) commandPkg.Interface {
@@ -35,14 +34,14 @@ func (c *command) Process(args string) string {
 		return "Please, enter a valid task id"
 	}
 
-	task, err := c.task.Get(ctx, uint(id))
+	task, err := c.task.Get(ctx, uint64(id))
 	if err != nil {
 		return errPkg.Error(err)
 	}
 
 	isCompleted := ""
 	if task.IsCompleted {
-		isCompleted = "It is completed at " + task.CompletedAt.Time.Format(time.RFC850)
+		isCompleted = "It is completed at " + task.CompletedAt
 	} else {
 		isCompleted = "It is not completed yet"
 	}
@@ -50,7 +49,7 @@ func (c *command) Process(args string) string {
 	return fmt.Sprintf(
 		"You are viewing detailed info of task\n%v.\nThis task was created at %s.\n%s",
 		task.String(),
-		task.CreatedAt.Format(time.RFC850),
+		task.CreatedAt,
 		isCompleted,
 	)
 }

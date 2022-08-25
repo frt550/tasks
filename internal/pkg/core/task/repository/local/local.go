@@ -6,7 +6,7 @@ import (
 	"tasks/internal/pkg/core/counter"
 	errPkg "tasks/internal/pkg/core/error"
 	"tasks/internal/pkg/core/task/models"
-	storagePkg "tasks/internal/pkg/core/task/repository"
+	repositoryPkg "tasks/internal/pkg/core/task/repository"
 	"time"
 
 	"github.com/pkg/errors"
@@ -15,21 +15,21 @@ import (
 const poolSize = 10
 const shortDuration = 10 * time.Millisecond
 
-func New() storagePkg.Interface {
+func New() repositoryPkg.Interface {
 	return &cache{
 		mu:     sync.RWMutex{},
-		data:   map[uint]models.Task{},
+		data:   map[uint64]models.Task{},
 		poolCh: make(chan struct{}, poolSize),
 	}
 }
 
 type cache struct {
 	mu     sync.RWMutex
-	data   map[uint]models.Task
+	data   map[uint64]models.Task
 	poolCh chan struct{}
 }
 
-func (c *cache) FindAll(_ context.Context, _, _ uint64) ([]models.Task, error) {
+func (c *cache) FindAll(_ context.Context, _, _ uint64) ([]*models.Task, error) {
 	c.poolCh <- struct{}{}
 	c.mu.RLock()
 	defer func() {
@@ -37,9 +37,9 @@ func (c *cache) FindAll(_ context.Context, _, _ uint64) ([]models.Task, error) {
 		<-c.poolCh
 	}()
 
-	result := make([]models.Task, 0, len(c.data))
+	result := make([]*models.Task, 0, len(c.data))
 	for _, value := range c.data {
-		result = append(result, value)
+		result = append(result, &value)
 	}
 	return result, nil
 }
@@ -79,7 +79,7 @@ func (c *cache) Update(_ context.Context, task *models.Task) error {
 	return nil
 }
 
-func (c *cache) DeleteById(_ context.Context, id uint) error {
+func (c *cache) DeleteById(_ context.Context, id uint64) error {
 	c.poolCh <- struct{}{}
 	c.mu.Lock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -96,7 +96,7 @@ func (c *cache) DeleteById(_ context.Context, id uint) error {
 	return nil
 }
 
-func (c *cache) FindOneById(_ context.Context, id uint) (models.Task, error) {
+func (c *cache) FindOneById(_ context.Context, id uint64) (*models.Task, error) {
 	c.poolCh <- struct{}{}
 	c.mu.RLock()
 	_, cancel := context.WithTimeout(context.Background(), shortDuration)
@@ -107,7 +107,8 @@ func (c *cache) FindOneById(_ context.Context, id uint) (models.Task, error) {
 	}()
 
 	if _, ok := c.data[id]; !ok {
-		return models.Task{}, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
+		return nil, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 	}
-	return c.data[id], nil
+	task := c.data[id]
+	return &task, nil
 }

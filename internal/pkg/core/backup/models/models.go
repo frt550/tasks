@@ -1,11 +1,7 @@
 package models
 
-import (
-	"time"
-)
-
 type Backup struct {
-	Id        uint      `postgres:"id"`
-	Data      string    `postgres:"data"`
-	CreatedAt time.Time `postgres:"created_at"`
+	Id        uint64 `postgres:"id"`
+	Data      string `postgres:"data"`
+	CreatedAt string `postgres:"created_at"`
 }

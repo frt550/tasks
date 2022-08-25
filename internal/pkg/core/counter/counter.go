@@ -1,8 +1,8 @@
 package counter
 
-var id uint = 0
+var id uint64 = 0
 
-func GetId() uint {
+func GetId() uint64 {
 	id++
 	return id
 }

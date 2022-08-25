@@ -34,8 +34,8 @@ func (c *command) Process(args string) string {
 	if err != nil {
 		errPkg.Error(err)
 	}
-	var pendingTasks = make([]models.Task, 0, len(allTasks))
-	var completedTasks = make([]models.Task, 0, len(allTasks))
+	var pendingTasks = make([]*models.Task, 0, len(allTasks))
+	var completedTasks = make([]*models.Task, 0, len(allTasks))
 
 	for _, task := range allTasks {
 		if task.IsCompleted {

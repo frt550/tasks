@@ -34,7 +34,7 @@ func (c *command) Process(args string) string {
 		return "Please, enter a valid task id"
 	}
 
-	if task, err := c.task.Delete(ctx, uint(id)); err != nil {
+	if task, err := c.task.Delete(ctx, uint64(id)); err != nil {
 		return errPkg.Error(err)
 	} else {
 		return fmt.Sprintf("Task %v is deleted", task)

@@ -39,7 +39,7 @@ func (c *command) Process(args string) string {
 		title = strings.Join(params[1:], " ")
 	}
 
-	if task, err := c.task.UpdateTitle(context.Background(), uint(id), title); err != nil {
+	if task, err := c.task.UpdateTitle(context.Background(), uint64(id), title); err != nil {
 		return errPkg.Error(err)
 	} else {
 		return fmt.Sprintf("Task #%d is updated to %s", task.Id, task.Title)

@@ -5,13 +5,14 @@ import (
 	apiPkg "tasks/internal/api/backup"
 	"tasks/internal/config"
 	backupPkg "tasks/internal/pkg/core/backup"
+	"tasks/internal/pkg/core/backup/repository/postgres"
 	pb "tasks/pkg/api/backup"
 
 	"google.golang.org/grpc"
 )
 
 func main() {
-	var backup = backupPkg.New()
+	var backup = backupPkg.New(postgres.New())
 	runGRPCServer(backup)
 }
 

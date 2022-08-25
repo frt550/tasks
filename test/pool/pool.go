@@ -3,31 +3,33 @@ package pool
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"log"
 	"sync"
 	"tasks/internal/config"
 
-	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
-
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-var instance *pgxpool.Pool
+var testPool *pgxpool.Pool
 var once sync.Once
 
-type Interface interface {
-	Exec(ctx context.Context, sql string, arguments ...interface{}) (commandTag pgconn.CommandTag, err error)
-	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
-}
-
-func GetInstance() *pgxpool.Pool {
+func GetInstance() (pgx.Tx, func()) {
 	once.Do(func() {
-		instance = createSingleton()
+		testPool = createSingleton()
 		fmt.Println("created singleton of pool")
 	})
-	return instance
+
+	tx, err := testPool.Begin(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	cleanup := func() {
+		if err := tx.Rollback(context.Background()); err != nil {
+			panic(err)
+		}
+	}
+	return tx, cleanup
 }
 
 func createSingleton() *pgxpool.Pool {
@@ -37,11 +39,11 @@ func createSingleton() *pgxpool.Pool {
 	// connection string
 	psqlConn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.Config.Db.Host,
-		config.Config.Db.Port,
-		config.Config.Db.User,
-		config.Config.Db.Password,
-		config.Config.Db.Name,
+		config.Config.TestDb.Host,
+		config.Config.TestDb.Port,
+		config.Config.TestDb.User,
+		config.Config.TestDb.Password,
+		config.Config.TestDb.Name,
 	)
 
 	// connect to database

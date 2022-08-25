@@ -1,0 +1,39 @@
+package test
+
+import (
+	taskPkg "tasks/internal/pkg/core/task"
+	repositoryPkg "tasks/internal/pkg/core/task/repository"
+	"tasks/internal/pkg/core/task/repository/postgres"
+	testPoolPkg "tasks/test/pool"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+)
+
+type ServiceSuite struct {
+	suite.Suite
+	core       taskPkg.Interface
+	repository repositoryPkg.Interface
+	_cleanup   func()
+}
+
+func TestIntegration(t *testing.T) {
+	suite.Run(t, new(ServiceSuite))
+}
+
+func (s *ServiceSuite) SetupTest() {
+	pool, cleanup := testPoolPkg.GetInstance()
+	// SetupTest is also called before suite (not sure), causing unexpected behavior
+	// so call cleanup of previous setup
+	if s._cleanup != nil {
+		s._cleanup()
+	}
+	s.repository = postgres.New(pool)
+	s.core = taskPkg.New(s.repository)
+	s._cleanup = cleanup
+}
+
+func (s *ServiceSuite) TearDownTest() {
+	s._cleanup()
+	s._cleanup = nil
+}

@@ -1,4 +1,4 @@
 .idea
 bin/
 pkg/api
-postgresql
+*_mock.go

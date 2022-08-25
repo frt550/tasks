@@ -2,11 +2,9 @@ package transport
 
 import (
 	"context"
-	"database/sql"
 	"tasks/internal/config"
 	"tasks/internal/pkg/core/task/models"
 	pb "tasks/pkg/api/task"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -47,19 +45,11 @@ func (t *transport) All(ctx context.Context) ([]models.Task, error) {
 }
 
 func createTask(taskResponse *pb.TaskResponse) (models.Task, error) {
-	var createdAt, completedAt time.Time
-	var err error
-	if createdAt, err = time.Parse("Monday, 02-Jan-06 15:04:05 UTC", taskResponse.CreatedAt); err != nil {
-		return models.Task{}, err
-	}
-	if completedAt, err = time.Parse("Monday, 02-Jan-06 15:04:05 UTC", taskResponse.CompletedAt); err != nil {
-		return models.Task{}, err
-	}
 	return models.Task{
-		Id:          uint(taskResponse.Id),
+		Id:          taskResponse.Id,
 		Title:       taskResponse.Title,
 		IsCompleted: taskResponse.IsCompleted,
-		CreatedAt:   createdAt,
-		CompletedAt: sql.NullTime{Time: completedAt, Valid: true},
+		CreatedAt:   taskResponse.CreatedAt,
+		CompletedAt: taskResponse.CompletedAt,
 	}, nil
 }

@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	errPkg "tasks/internal/pkg/core/error"
-	"tasks/internal/pkg/core/pool"
 	"tasks/internal/pkg/core/task/models"
-	storagePkg "tasks/internal/pkg/core/task/repository"
+	repositoryPkg "tasks/internal/pkg/core/task/repository"
 
 	"github.com/jackc/pgx/v4"
 
@@ -16,20 +15,28 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	poolPkg "tasks/internal/pkg/core/pool"
 )
 
 type repository struct {
-	pool *pgxpool.Pool
+	pool poolPkg.Interface
 }
 
-func New() storagePkg.Interface {
-	return &repository{pool.GetInstance()}
+func New(pool poolPkg.Interface) repositoryPkg.Interface {
+	return &repository{pool}
 }
 
-func (r *repository) FindAll(ctx context.Context, limit, offset uint64) ([]models.Task, error) {
+func prepareNullableTimestamp(timestamp string) *string {
+	if timestamp != "" {
+		return &timestamp
+	} else {
+		return nil
+	}
+}
+
+func (r *repository) FindAll(ctx context.Context, limit, offset uint64) ([]*models.Task, error) {
 	selectBuilder := squirrel.
-		Select("id, title, is_completed, created_at, completed_at").
+		Select("id, title, is_completed, created_at::TEXT, COALESCE(completed_at::TEXT,'') as completed_at").
 		From("task").
 		PlaceholderFormat(squirrel.Dollar).OrderBy()
 	if limit > 0 {
@@ -40,10 +47,10 @@ func (r *repository) FindAll(ctx context.Context, limit, offset uint64) ([]model
 	}
 	sql, args, err := selectBuilder.ToSql()
 	if err != nil {
-		return make([]models.Task, 0), fmt.Errorf("Repository.FindAll: to sql: %w", err)
+		return make([]*models.Task, 0), fmt.Errorf("Repository.FindAll: to sql: %w", err)
 	}
 
-	var result []models.Task
+	var result []*models.Task
 	err = pgxscan.Select(ctx, r.pool, &result, sql, args...)
 	if err != nil {
 		return nil, fmt.Errorf("Repository.FindAll: select: %w", err)
@@ -55,7 +62,7 @@ func (r *repository) Insert(ctx context.Context, task *models.Task) error {
 	sql, args, err := squirrel.
 		Insert("task").
 		Columns("title, is_completed, created_at, completed_at").
-		Values(task.Title, task.IsCompleted, task.CreatedAt, task.CompletedAt).
+		Values(task.Title, task.IsCompleted, task.CreatedAt, prepareNullableTimestamp(task.CompletedAt)).
 		Suffix("RETURNING id").
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
@@ -78,7 +85,7 @@ func (r *repository) Update(ctx context.Context, task *models.Task) error {
 			"title":        task.Title,
 			"is_completed": task.IsCompleted,
 			"created_at":   task.CreatedAt,
-			"completed_at": task.CompletedAt,
+			"completed_at": prepareNullableTimestamp(task.CompletedAt),
 		}).
 		Where(squirrel.Eq{"id": task.Id}).
 		PlaceholderFormat(squirrel.Dollar).
@@ -99,7 +106,7 @@ func (r *repository) Update(ctx context.Context, task *models.Task) error {
 	}
 }
 
-func (r *repository) DeleteById(ctx context.Context, id uint) error {
+func (r *repository) DeleteById(ctx context.Context, id uint64) error {
 	sql, args, err := squirrel.
 		Delete("task").
 		Where(squirrel.Eq{"id": id}).
@@ -117,25 +124,25 @@ func (r *repository) DeleteById(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (r *repository) FindOneById(ctx context.Context, id uint) (models.Task, error) {
+func (r *repository) FindOneById(ctx context.Context, id uint64) (*models.Task, error) {
 	sql, args, err := squirrel.
-		Select("id, title, is_completed, created_at, completed_at").
+		Select("id, title, is_completed, created_at::TEXT, COALESCE(completed_at::TEXT,'') as completed_at").
 		From("task").
 		Where(squirrel.Eq{"id": id}).
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
-		return models.Task{}, fmt.Errorf("Repository.FindOneById: to sql: %w", err)
+		return nil, fmt.Errorf("Repository.FindOneById: to sql: %w", err)
 	}
 
 	var result models.Task
 	if err := pgxscan.Get(ctx, r.pool, &result, sql, args...); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return models.Task{}, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
+			return nil, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 		} else {
-			return models.Task{}, fmt.Errorf("Repository.FindOneById: select: %w", err)
+			return nil, fmt.Errorf("Repository.FindOneById: select: %w", err)
 		}
 	}
 
-	return result, nil
+	return &result, nil
 }

@@ -8,7 +8,6 @@ import (
 	backupPkg "tasks/internal/pkg/core/backup"
 	backupModelPkg "tasks/internal/pkg/core/backup/models"
 	pb "tasks/pkg/api/backup"
-	"time"
 )
 
 func New(backup backupPkg.Interface) pb.AdminServer {
@@ -32,8 +31,8 @@ func (i *implementation) BackupCreate(ctx context.Context, _ *emptypb.Empty) (*p
 
 func createBackupResponse(backup *backupModelPkg.Backup) *pb.BackupResponse {
 	return &pb.BackupResponse{
-		Id:        uint64(backup.Id),
+		Id:        backup.Id,
 		Data:      backup.Data,
-		CreatedAt: backup.CreatedAt.Format(time.RFC850),
+		CreatedAt: backup.CreatedAt,
 	}
 }

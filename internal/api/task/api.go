@@ -7,7 +7,6 @@ import (
 	taskPkg "tasks/internal/pkg/core/task"
 	taskModelPkg "tasks/internal/pkg/core/task/models"
 	pb "tasks/pkg/api/task"
-	"time"
 )
 
 func New(task taskPkg.Interface) pb.AdminServer {
@@ -30,7 +29,7 @@ func (i *implementation) TaskCreate(ctx context.Context, in *pb.TaskCreateReques
 }
 
 func (i *implementation) TaskGet(ctx context.Context, in *pb.TaskGetRequest) (*pb.TaskResponse, error) {
-	task, err := i.task.Get(ctx, uint(in.GetId()))
+	task, err := i.task.Get(ctx, in.GetId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
@@ -39,7 +38,7 @@ func (i *implementation) TaskGet(ctx context.Context, in *pb.TaskGetRequest) (*p
 }
 
 func (i *implementation) TaskUpdate(ctx context.Context, in *pb.TaskUpdateRequest) (*pb.TaskResponse, error) {
-	if task, err := i.task.UpdateTitle(ctx, uint(in.GetId()), in.GetTitle()); err != nil {
+	if task, err := i.task.UpdateTitle(ctx, in.GetId(), in.GetTitle()); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		return createTaskResponse(task), nil
@@ -47,7 +46,7 @@ func (i *implementation) TaskUpdate(ctx context.Context, in *pb.TaskUpdateReques
 }
 
 func (i *implementation) TaskDelete(ctx context.Context, in *pb.TaskDeleteRequest) (*pb.TaskResponse, error) {
-	if task, err := i.task.Delete(ctx, uint(in.GetId())); err != nil {
+	if task, err := i.task.Delete(ctx, in.GetId()); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		return createTaskResponse(task), nil
@@ -55,7 +54,7 @@ func (i *implementation) TaskDelete(ctx context.Context, in *pb.TaskDeleteReques
 }
 
 func (i *implementation) TaskComplete(ctx context.Context, in *pb.TaskCompleteRequest) (*pb.TaskResponse, error) {
-	if task, err := i.task.Complete(ctx, uint(in.GetId())); err != nil {
+	if task, err := i.task.Complete(ctx, in.GetId()); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	} else {
 		return createTaskResponse(task), nil
@@ -69,7 +68,7 @@ func (i *implementation) TaskAll(ctx context.Context, in *pb.TaskAllRequest) (*p
 	}
 	taskResponses := make([]*pb.TaskResponse, 0, len(tasks))
 	for _, task := range tasks {
-		taskResponses = append(taskResponses, createTaskResponse(&task))
+		taskResponses = append(taskResponses, createTaskResponse(task))
 	}
 	return &pb.TaskAllResponse{
 		Tasks: taskResponses,
@@ -78,10 +77,10 @@ func (i *implementation) TaskAll(ctx context.Context, in *pb.TaskAllRequest) (*p
 
 func createTaskResponse(task *taskModelPkg.Task) *pb.TaskResponse {
 	return &pb.TaskResponse{
-		Id:          uint64(task.Id),
+		Id:          task.Id,
 		Title:       task.Title,
 		IsCompleted: task.IsCompleted,
-		CreatedAt:   task.CreatedAt.Format(time.RFC850),
-		CompletedAt: task.CompletedAt.Time.Format(time.RFC850),
+		CreatedAt:   task.CreatedAt,
+		CompletedAt: task.CompletedAt,
 	}
 }
