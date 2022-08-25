@@ -4,14 +4,16 @@ import (
 	"net"
 	apiPkg "tasks/internal/api/task"
 	"tasks/internal/config"
+	poolPkg "tasks/internal/pkg/core/pool"
 	taskPkg "tasks/internal/pkg/core/task"
+	"tasks/internal/pkg/core/task/repository/postgres"
 	pb "tasks/pkg/api/task"
 
 	"google.golang.org/grpc"
 )
 
 func main() {
-	var task = taskPkg.New()
+	var task = taskPkg.New(postgres.New(poolPkg.GetInstance()))
 	runGRPCServer(task)
 }
 

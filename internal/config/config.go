@@ -40,6 +40,13 @@ type config struct {
 		Password string
 		Name     string
 	}
+	TestDb struct {
+		Host     string
+		Port     string
+		User     string
+		Password string
+		Name     string
+	}
 	App struct {
 		Debug string
 	}
@@ -48,7 +55,8 @@ type config struct {
 func init() {
 	Config = config{}
 
-	if err := godotenv.Load(); err != nil {
+	envPath := os.ExpandEnv("$GOPATH/src/tasks/.env")
+	if err := godotenv.Load(envPath); err != nil {
 		panic(err)
 	}
 
@@ -100,6 +108,23 @@ func init() {
 	})
 	loadEnv("DB_NAME", func(val string) {
 		Config.Db.Name = val
+	})
+
+	// TEST_DB
+	loadEnv("TEST_DB_HOST", func(val string) {
+		Config.TestDb.Host = val
+	})
+	loadEnv("TEST_DB_PORT", func(val string) {
+		Config.TestDb.Port = val
+	})
+	loadEnv("TEST_DB_USER", func(val string) {
+		Config.TestDb.User = val
+	})
+	loadEnv("TEST_DB_PASSWORD", func(val string) {
+		Config.TestDb.Password = val
+	})
+	loadEnv("TEST_DB_NAME", func(val string) {
+		Config.TestDb.Name = val
 	})
 
 	// APP

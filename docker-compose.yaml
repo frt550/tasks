@@ -5,11 +5,15 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: tasks
-    container_name: 'postgresql-container-tasks'
+    container_name: 'postgres-tasks'
     volumes:
-      - ./postgresql/data:/var/lib/postgresql/data # том для того, чтобы при перезапуске контейнера все данные сохранялись
-      - ./postgres.conf:/etc/postgresql/postgresql.conf # конфиг БД
+      - postgres-data:/var/lib/postgresql/data # том для того, чтобы при перезапуске контейнера все данные сохранялись
+      - ./docker/postgres/postgres.conf:/etc/postgresql/postgresql.conf # конфиг БД
+      - ./docker/postgres/testing-db.sql:/docker-entrypoint-initdb.d/testing-db.sql
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     ports:
       - 5432:5432
     restart: always
+
+volumes:
+  postgres-data:

@@ -3,7 +3,7 @@
 CREATE TABLE public.backup (
     id serial PRIMARY KEY,
     data text NOT NULL,
-    created_at timestamp NOT NULL
+    created_at timestamp(0) NOT NULL
 );
 -- +goose StatementEnd
 

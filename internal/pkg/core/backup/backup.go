@@ -5,18 +5,17 @@ import (
 	"encoding/json"
 	"tasks/internal/pkg/core/backup/models"
 	"tasks/internal/pkg/core/backup/repository"
-	"tasks/internal/pkg/core/backup/repository/postgres"
 	transportPkg "tasks/internal/pkg/core/backup/transport"
-	"time"
+	timePkg "tasks/internal/pkg/core/time"
 )
 
 type Interface interface {
 	Backup(ctx context.Context) (*models.Backup, error)
 }
 
-func New() Interface {
+func New(repository repository.Interface) Interface {
 	return &core{
-		repository: postgres.New(),
+		repository: repository,
 	}
 }
 
@@ -39,7 +38,7 @@ func (b *core) Backup(ctx context.Context) (*models.Backup, error) {
 	}
 	backup := &models.Backup{
 		Data:      string(j),
-		CreatedAt: time.Now(),
+		CreatedAt: timePkg.NowUTCFormatted(),
 	}
 	if err := b.repository.Insert(ctx, backup); err != nil {
 		return nil, err

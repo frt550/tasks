@@ -10,11 +10,13 @@ import (
 	cmdReadPkg "tasks/internal/pkg/bot/command/read"
 	cmdShowPkg "tasks/internal/pkg/bot/command/show"
 	cmdUpdatePkg "tasks/internal/pkg/bot/command/update"
+	poolPkg "tasks/internal/pkg/core/pool"
 	taskPkg "tasks/internal/pkg/core/task"
+	"tasks/internal/pkg/core/task/repository/postgres"
 )
 
 func main() {
-	var task = taskPkg.New()
+	var task = taskPkg.New(postgres.New(poolPkg.GetInstance()))
 	runBot(task)
 }
 
