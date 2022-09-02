@@ -29,10 +29,29 @@ func (i *implementation) BackupCreate(ctx context.Context, _ *emptypb.Empty) (*p
 	}
 }
 
+func (i *implementation) AsyncBackupCreate(ctx context.Context, in *pb.AsyncBackupCreateRequest) (*pb.AsyncBackupCreateResponse, error) {
+	if backup, err := i.backup.AsyncBackup(ctx, in.RequestId); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	} else {
+		return createAsyncBackupResponse(backup), nil
+	}
+}
+
 func createBackupResponse(backup *backupModelPkg.Backup) *pb.BackupResponse {
+	if backup == nil {
+		return nil
+	}
 	return &pb.BackupResponse{
 		Id:        backup.Id,
 		Data:      backup.Data,
 		CreatedAt: backup.CreatedAt,
+	}
+}
+
+func createAsyncBackupResponse(asyncBackup *backupModelPkg.AsyncBackup) *pb.AsyncBackupCreateResponse {
+	return &pb.AsyncBackupCreateResponse{
+		RequestId: asyncBackup.RequestId,
+		State:     asyncBackup.State,
+		Backup:    createBackupResponse(asyncBackup.Backup),
 	}
 }

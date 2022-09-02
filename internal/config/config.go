@@ -32,6 +32,9 @@ type config struct {
 		Rest struct {
 			ServerAddress string
 		}
+		Metric struct {
+			HttpAddress string
+		}
 	}
 	Db struct {
 		Host     string
@@ -50,14 +53,25 @@ type config struct {
 	App struct {
 		Debug string
 	}
+	Graylog struct {
+		Gelf struct {
+			Address string
+		}
+	}
+	Kafka struct {
+		Broker0 string
+	}
 }
 
 func init() {
 	Config = config{}
 
-	envPath := os.ExpandEnv("$GOPATH/src/tasks/.env")
-	if err := godotenv.Load(envPath); err != nil {
-		panic(err)
+	if err := godotenv.Load(); err != nil {
+		// For tests: running test location is different from project root, so define envPath
+		envPath := os.ExpandEnv("$GOPATH/src/tasks/.env")
+		if err = godotenv.Load(envPath); err != nil {
+			panic(err)
+		}
 	}
 
 	// TELEGRAM
@@ -91,6 +105,9 @@ func init() {
 	})
 	loadEnv("BACKUP_REST_SERVER_ADDRESS", func(val string) {
 		Config.Backup.Rest.ServerAddress = val
+	})
+	loadEnv("BACKUP_METRIC_HTTP_ADDRESS", func(val string) {
+		Config.Backup.Metric.HttpAddress = val
 	})
 
 	// DB
@@ -130,6 +147,16 @@ func init() {
 	// APP
 	loadEnv("APP_DEBUG", func(val string) {
 		Config.App.Debug = val
+	})
+
+	// GRAYLOG
+	loadEnv("GRAYLOG_GELF_ADDRESS", func(val string) {
+		Config.Graylog.Gelf.Address = val
+	})
+
+	// KAFKA
+	loadEnv("KAFKA_BROKER0", func(val string) {
+		Config.Kafka.Broker0 = val
 	})
 }
 

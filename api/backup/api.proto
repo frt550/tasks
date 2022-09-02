@@ -13,10 +13,26 @@ service Admin {
       body: "*"
     };
   }
+  rpc AsyncBackupCreate(AsyncBackupCreateRequest) returns (AsyncBackupCreateResponse) {
+    option (google.api.http) = {
+      post: "/v1/backup/async"
+      body: "*"
+    };
+  }
 }
 
 message BackupResponse {
   uint64  id            = 1;
   string  data          = 2;
   string  created_at    = 3;
+}
+
+message AsyncBackupCreateRequest {
+  string request_id = 1;
+}
+
+message AsyncBackupCreateResponse {
+  string request_id     = 1;
+  string state          = 2;
+  BackupResponse backup = 3;
 }

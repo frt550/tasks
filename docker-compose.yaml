@@ -1,19 +1,201 @@
+version: '3.9'
 services:
+  task:
+    build:
+      context: .
+      dockerfile: ./docker/task/Dockerfile
+    image: task
+    volumes:
+      - ./:/app
+    ports:
+      - "8078:8078"
+    environment:
+      - JAEGER_SERVICE_NAME=task
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - JAEGER_REPORTER_LOG_SPANS=true
+    networks:
+      - tasks-net
+    depends_on:
+      - postgres
+      - graylog
+      - jaeger
+      - prometheus
+      - kafka0
+  backup:
+    build:
+      context: .
+      dockerfile: ./docker/backup/Dockerfile
+    image: backup
+    volumes:
+      - ./:/app
+    ports:
+      - "8079:8079"
+      # metrics handler
+      - "1024:1024"
+    environment:
+      - JAEGER_SERVICE_NAME=backup
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+      - JAEGER_REPORTER_LOG_SPANS=true
+    networks:
+      - tasks-net
+    depends_on:
+      - postgres
+      - graylog
+      - jaeger
+      - prometheus
+      - kafka0
   postgres:
     image: postgres:14.4
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: tasks
-    container_name: 'postgres-tasks'
     volumes:
       - postgres-data:/var/lib/postgresql/data # том для того, чтобы при перезапуске контейнера все данные сохранялись
       - ./docker/postgres/postgres.conf:/etc/postgresql/postgresql.conf # конфиг БД
       - ./docker/postgres/testing-db.sql:/docker-entrypoint-initdb.d/testing-db.sql
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     ports:
-      - 5432:5432
+      - "5432:5432"
     restart: always
+    networks:
+      - tasks-net
+
+  # MongoDB: https://hub.docker.com/_/mongo/
+  mongo:
+    image: mongo:4.2
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - graylog
+  # Elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/7.10/docker.html
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Dlog4j2.formatMsgNoLookups=true -Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    networks:
+      - graylog
+  # Graylog: https://hub.docker.com/r/graylog/graylog/
+  graylog:
+    image: graylog/graylog:4.3.5
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+    environment:
+      # CHANGE ME (must be at least 16 characters)!
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      # Password: admin
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+    entrypoint: /usr/bin/tini -- wait-for-it elasticsearch:9200 --  /docker-entrypoint.sh
+    networks:
+      - graylog
+      - tasks-net
+    restart: always
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      # Graylog web interface and REST API
+      - "9000:9000"
+      # Syslog TCP
+      - "1514:1514"
+      # Syslog UDP
+      - "1514:1514/udp"
+      # GELF TCP
+      - "12201:12201"
+      # GELF UDP
+      - "12201:12201/udp"
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - "16686:16686"
+    networks:
+      - tasks-net
+  prometheus:
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - type: bind
+        source: ./docker/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+    networks:
+      - tasks-net
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - zookeeper0
+      - kafka0
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka0:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper0:2181
+    networks:
+      tasks-net:
+
+  zookeeper0:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper0_data:/var/lib/zookeeper/data
+    ports:
+      - "2181:2181"
+    networks:
+      tasks-net:
+
+  kafka0:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper0
+    volumes:
+      - kafka0_data:/var/lib/kafka/data
+    ports:
+      - "9092:9092"
+      - "9997:9997"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper0:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka0:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      tasks-net:
 
 volumes:
   postgres-data:
+  mongo_data:
+    driver: local
+  es_data:
+    driver: local
+  graylog_data:
+    driver: local
+  zookeeper0_data:
+  kafka0_data:
+networks:
+  tasks-net:
+  graylog:
+    driver: bridge

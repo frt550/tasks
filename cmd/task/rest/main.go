@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"tasks/internal/config"
+	"tasks/internal/pkg/core/logger"
 	pb "tasks/pkg/api/task"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -32,7 +33,7 @@ func runREST() {
 	}
 
 	if err := http.ListenAndServe(config.Config.Task.Rest.ServerAddress, mux); err != nil {
-		panic(err)
+		logger.Logger.Sugar().Fatal(err)
 	}
 }
 
