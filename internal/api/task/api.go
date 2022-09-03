@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	taskPkg "tasks/internal/pkg/core/task"
 	taskModelPkg "tasks/internal/pkg/core/task/models"
 	pb "tasks/pkg/api/task"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func New(task taskPkg.Interface) pb.AdminServer {
