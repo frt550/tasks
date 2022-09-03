@@ -3,10 +3,11 @@ package pool
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4"
 	"log"
 	"sync"
 	"tasks/internal/config"
+
+	"github.com/jackc/pgx/v4"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 )

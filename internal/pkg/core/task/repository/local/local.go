@@ -18,14 +18,14 @@ const shortDuration = 10 * time.Millisecond
 func New() repositoryPkg.Interface {
 	return &cache{
 		mu:     sync.RWMutex{},
-		data:   map[uint64]models.Task{},
+		data:   map[uint64]*models.Task{},
 		poolCh: make(chan struct{}, poolSize),
 	}
 }
 
 type cache struct {
 	mu     sync.RWMutex
-	data   map[uint64]models.Task
+	data   map[uint64]*models.Task
 	poolCh chan struct{}
 }
 
@@ -39,7 +39,7 @@ func (c *cache) FindAll(_ context.Context, _, _ uint64) ([]*models.Task, error) 
 
 	result := make([]*models.Task, 0, len(c.data))
 	for _, value := range c.data {
-		result = append(result, &value)
+		result = append(result, value)
 	}
 	return result, nil
 }
@@ -58,7 +58,7 @@ func (c *cache) Insert(_ context.Context, task *models.Task) error {
 	if _, ok := c.data[task.Id]; ok {
 		return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is already exists", task.Id)
 	}
-	c.data[task.Id] = *task
+	c.data[task.Id] = task
 	return nil
 }
 
@@ -75,7 +75,7 @@ func (c *cache) Update(_ context.Context, task *models.Task) error {
 	if _, ok := c.data[task.Id]; !ok {
 		return errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", task.Id)
 	}
-	c.data[task.Id] = *task
+	c.data[task.Id] = task
 	return nil
 }
 
@@ -110,5 +110,5 @@ func (c *cache) FindOneById(_ context.Context, id uint64) (*models.Task, error) 
 		return nil, errors.Wrapf(errPkg.DomainError, "Sorry, task #%d is not found", id)
 	}
 	task := c.data[id]
-	return &task, nil
+	return task, nil
 }

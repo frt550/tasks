@@ -52,6 +52,10 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			logger.Logger.Sugar().Infof("task_all_request_handler: received new message, request id %s", message.RequestId)
 
 			allTasks, err := h.taskService.All(context.Background(), 0, 0)
+			if err != nil {
+				logger.Logger.Sugar().Error(err)
+				return err
+			}
 			j, err := json.Marshal(allTasks)
 			if err != nil {
 				logger.Logger.Sugar().Error(err)

@@ -1,0 +1,53 @@
+image: golang:1.18
+
+stages:
+  - build
+  - tests
+
+setup-ci:
+  stage: build
+  artifacts:
+    untracked: true
+    paths:
+      - /usr/local/go/bin/goose
+  script:
+    - make setup-ci
+
+build:
+  stage: build
+  dependencies:
+    - setup-ci
+  needs: [setup-ci]
+  image: docker:20.10.16-dind
+  script:
+    - docker build -f ./docker/task/Dockerfile .
+    - docker build -f ./docker/backup/Dockerfile .
+
+lint:
+  stage: build
+  needs: [setup-ci, build]
+  script:
+    - make lint
+
+unit-test:
+  stage: tests
+  dependencies:
+    - setup-ci
+  needs: [setup-ci, build, lint]
+  script:
+    - make test
+
+integration-test:
+  stage: tests
+  dependencies:
+    - setup-ci
+  needs: [setup-ci, build, lint]
+  services:
+    - postgres:14.4-alpine
+  variables:
+    POSTGRES_DB: tasks_test
+    POSTGRES_USER: user
+    POSTGRES_PASSWORD: password
+    POSTGRES_HOST_AUTH_METHOD: trust
+  script:
+    - make integration-test

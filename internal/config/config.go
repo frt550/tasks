@@ -67,10 +67,14 @@ func init() {
 	Config = config{}
 
 	if err := godotenv.Load(); err != nil {
-		// For tests: running test location is different from project root, so define envPath
+		// For local tests: running test location is different from project root, so define envPath
 		envPath := os.ExpandEnv("$GOPATH/src/tasks/.env")
 		if err = godotenv.Load(envPath); err != nil {
-			panic(err)
+			// For ci tests
+			envPath := os.ExpandEnv("/builds/frt550/tasks/.env")
+			if err = godotenv.Load(envPath); err != nil {
+				panic(err)
+			}
 		}
 	}
 
