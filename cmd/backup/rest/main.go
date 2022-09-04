@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"tasks/internal/config"
 	pb "tasks/pkg/api/backup"
@@ -24,9 +23,6 @@ func runREST() {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
-	if err := mux.HandlePath("GET", "/v1/swagger", serveSwaggerFile); err != nil {
-		panic(err)
-	}
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err := pb.RegisterAdminHandlerFromEndpoint(ctx, mux, config.Config.Backup.Grpc.ServerAddress, opts); err != nil {
 		panic(err)
@@ -42,9 +38,4 @@ func runREST() {
 	if err := http.ListenAndServe(config.Config.Backup.Rest.ServerAddress, handler); err != nil {
 		panic(err)
 	}
-}
-
-func serveSwaggerFile(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	log.Println("Serving swagger-file: pkg/api/backup/api.swagger.yaml")
-	http.ServeFile(w, r, "/app/pkg/api/backup/api.swagger.yaml")
 }

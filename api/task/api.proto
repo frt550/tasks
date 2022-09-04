@@ -5,6 +5,7 @@ option go_package = "tasks/pkg/api;api";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 service Admin {
   rpc TaskCreate(TaskCreateRequest) returns (TaskResponse) {
@@ -80,3 +81,8 @@ message TaskAllResponse {
 message TaskCompleteRequest {
   uint64 id = 1;
 }
+
+// These annotations are used when generating the OpenAPI file.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  host: "localhost:8078";
+};

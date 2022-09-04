@@ -5,6 +5,7 @@ option go_package = "tasks/pkg/api;api";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 service Admin {
   rpc BackupCreate(google.protobuf.Empty) returns (BackupResponse) {
@@ -36,3 +37,8 @@ message AsyncBackupCreateResponse {
   string state          = 2;
   BackupResponse backup = 3;
 }
+
+// These annotations are used when generating the OpenAPI file.
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  host: "localhost:8079";
+};

@@ -189,13 +189,11 @@ services:
     ports:
       - "${SWAGGERUI_PORT}:8080"
     environment:
-      # TODO use hosted yaml. issue: "try it out" request host is incorrect. when fixed: remove /swagger rest handlers. possible fix: generate host in .yaml
-      #URLS: "[ { name: \"task\", url: \"/api/task/api.swagger.yaml\"}, { name: \"backup\", url: \"/api/backup/api.swagger.yaml\" } ]"
-      URLS: "[ { name: \"task\", url: \"http://localhost:8078/v1/swagger\"}, { name: \"backup\", url: \"http://localhost:8079/v1/swagger\" } ]"
+      URLS: "[ { name: \"task\", url: \"/api/task/api.swagger.yaml\"}, { name: \"backup\", url: \"/api/backup/api.swagger.yaml\" } ]"
     networks:
       tasks-net:
-#    volumes:
-#      - ./pkg/api:/usr/share/nginx/html/api
+    volumes:
+      - ./pkg/api:/usr/share/nginx/html/api
 
 volumes:
   postgres-data:
