@@ -61,6 +61,9 @@ type config struct {
 	Kafka struct {
 		Broker0 string
 	}
+	SwaggerUi struct {
+		Origin string
+	}
 }
 
 func init() {
@@ -161,6 +164,11 @@ func init() {
 	// KAFKA
 	loadEnv("KAFKA_BROKER0", func(val string) {
 		Config.Kafka.Broker0 = val
+	})
+
+	// SWAGGER-UI
+	loadEnv("SWAGGERUI_ORIGIN", func(val string) {
+		Config.SwaggerUi.Origin = val
 	})
 }
 

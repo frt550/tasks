@@ -22,3 +22,4 @@ plugins:
     out: pkg
     opt:
       - allow_delete_body=true
+      - output_format=yaml
