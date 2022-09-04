@@ -155,7 +155,7 @@ services:
       tasks-net:
 
   zookeeper0:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.2.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -167,7 +167,7 @@ services:
       tasks-net:
 
   kafka0:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.2.1
     depends_on:
       - zookeeper0
     volumes:
@@ -184,6 +184,18 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       tasks-net:
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    ports:
+      - "${SWAGGERUI_PORT}:8080"
+    environment:
+      # TODO use hosted yaml. issue: "try it out" request host is incorrect. when fixed: remove /swagger rest handlers. possible fix: generate host in .yaml
+      #URLS: "[ { name: \"task\", url: \"/api/task/api.swagger.yaml\"}, { name: \"backup\", url: \"/api/backup/api.swagger.yaml\" } ]"
+      URLS: "[ { name: \"task\", url: \"http://localhost:8078/v1/swagger\"}, { name: \"backup\", url: \"http://localhost:8079/v1/swagger\" } ]"
+    networks:
+      tasks-net:
+#    volumes:
+#      - ./pkg/api:/usr/share/nginx/html/api
 
 volumes:
   postgres-data:
