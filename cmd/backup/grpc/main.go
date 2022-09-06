@@ -74,10 +74,13 @@ func startMetricServer() {
 }
 
 func runConsumers(cache *cachePkg.Cache) {
+	saramaConfig := sarama.NewConfig()
+	// timeout to wait kafka. Otherwise, backup container is stopped when docker-compose up
+	saramaConfig.Admin.Timeout = 15 * time.Second
 	cg, err := sarama.NewConsumerGroup(
 		[]string{config.Config.Kafka.Broker0},
 		kafka.ConsumerGroupBackup,
-		sarama.NewConfig(),
+		saramaConfig,
 	)
 	if err != nil {
 		logger.Logger.Sugar().Fatal(err)
