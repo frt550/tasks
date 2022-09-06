@@ -13,6 +13,7 @@ import (
 	"tasks/internal/pkg/core/task/repository/postgres"
 	pb "tasks/pkg/api/task"
 	"tasks/pkg/contract/kafka"
+	"time"
 
 	"github.com/Shopify/sarama"
 
@@ -49,10 +50,13 @@ func runGRPCServer(task taskPkg.Interface) {
 }
 
 func runConsumers(taskService taskPkg.Interface) {
+	saramaConfig := sarama.NewConfig()
+	// timeout to wait kafka. Otherwise, task container is stopped when docker-compose up
+	saramaConfig.Admin.Timeout = 15 * time.Second
 	cg, err := sarama.NewConsumerGroup(
 		[]string{config.Config.Kafka.Broker0},
 		kafka.ConsumerGroupTask,
-		sarama.NewConfig(),
+		saramaConfig,
 	)
 	if err != nil {
 		logger.Logger.Sugar().Fatal(err)

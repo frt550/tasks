@@ -49,5 +49,6 @@ setup-ci:
 	export GOBIN="/usr/local/go/bin" && \
 	go env && \
 	make .deps && \
+	buf build && \
 	buf generate && \
 	go generate ./...
