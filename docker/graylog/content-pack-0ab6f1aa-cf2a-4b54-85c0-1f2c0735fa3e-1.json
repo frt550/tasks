@@ -1,0 +1,65 @@
+{
+  "v": 1,
+  "id": "0ab6f1aa-cf2a-4b54-85c0-1f2c0735fa3e",
+  "rev": 1,
+  "name": "inputs",
+  "summary": "inputs",
+  "description": "",
+  "vendor": "frt550",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "5f6985a4-aa6d-442c-833a-af842c74d490",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "GELF UDP"
+        },
+        "configuration": {
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 262144
+          },
+          "port": {
+            "@type": "integer",
+            "@value": 12201
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 4
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "decompress_size_limit": {
+            "@type": "integer",
+            "@value": 8388608
+          }
+        },
+        "static_fields": {},
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.gelf.udp.GELFUDPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=4.3.5+32fa802"
+        }
+      ]
+    }
+  ]
+}
