@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net"
+	"net/http"
 	apiPkg "tasks/internal/api/task"
 	"tasks/internal/config"
 	"tasks/internal/pkg/core/logger"
@@ -15,6 +16,10 @@ import (
 	"tasks/pkg/contract/kafka"
 	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/Shopify/sarama"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -22,11 +27,20 @@ import (
 
 	_ "tasks/internal/pkg/core/tracing"
 
+	cachedRepositoryPkg "tasks/internal/pkg/core/task/repository/cached/memcache"
+
 	"google.golang.org/grpc"
+
+	_ "tasks/internal/pkg/core/task/metric"
 )
 
 func main() {
-	var task = taskPkg.New(postgres.New(poolPkg.GetInstance()))
+	go startMetricServer()
+
+	repository := postgres.New(poolPkg.GetInstance())
+	cacheClient := memcache.New(config.Config.Memcached.Address)
+	cachedRepository := cachedRepositoryPkg.New(repository, cacheClient)
+	var task = taskPkg.New(cachedRepository)
 	go runConsumers(task)
 	runGRPCServer(task)
 }
@@ -46,6 +60,13 @@ func runGRPCServer(task taskPkg.Interface) {
 
 	if err = grpcServer.Serve(listener); err != nil {
 		logger.Logger.Sugar().Fatal(err)
+	}
+}
+
+func startMetricServer() {
+	http.Handle("/metrics", promhttp.Handler())
+	if err := http.ListenAndServe(config.Config.Task.Metric.HttpAddress, nil); err != nil {
+		panic(err)
 	}
 }
 

@@ -2,7 +2,7 @@ package interceptor
 
 import (
 	"context"
-	"tasks/internal/pkg/core/metric"
+	"tasks/internal/pkg/core/backup/metric"
 
 	"google.golang.org/grpc"
 )
