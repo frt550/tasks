@@ -9,6 +9,8 @@ services:
       - ./:/app
     ports:
       - "8078:8078"
+      # metrics handler
+      - "1025:1024"
     environment:
       - JAEGER_SERVICE_NAME=task
       - JAEGER_AGENT_HOST=jaeger
@@ -194,6 +196,12 @@ services:
       tasks-net:
     volumes:
       - ./pkg/api:/usr/share/nginx/html/api
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+    networks:
+      tasks-net:
 
 volumes:
   postgres-data:

@@ -4,3 +4,4 @@ scrape_configs:
   static_configs:
   - targets:
       - backup:1024
+      - task:1024

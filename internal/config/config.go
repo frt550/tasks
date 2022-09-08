@@ -22,6 +22,9 @@ type config struct {
 		Rest struct {
 			ServerAddress string
 		}
+		Metric struct {
+			HttpAddress string
+		}
 	}
 	Backup struct {
 		Grpc struct {
@@ -64,6 +67,9 @@ type config struct {
 	SwaggerUi struct {
 		Origin string
 	}
+	Memcached struct {
+		Address string
+	}
 }
 
 func init() {
@@ -98,6 +104,9 @@ func init() {
 	})
 	loadEnv("TASK_REST_SERVER_ADDRESS", func(val string) {
 		Config.Task.Rest.ServerAddress = val
+	})
+	loadEnv("TASK_METRIC_HTTP_ADDRESS", func(val string) {
+		Config.Task.Metric.HttpAddress = val
 	})
 
 	// BACKUP
@@ -169,6 +178,11 @@ func init() {
 	// SWAGGER-UI
 	loadEnv("SWAGGERUI_ORIGIN", func(val string) {
 		Config.SwaggerUi.Origin = val
+	})
+
+	// MEMCACHED
+	loadEnv("MEMCACHED_ADDRESS", func(val string) {
+		Config.Memcached.Address = val
 	})
 }
 

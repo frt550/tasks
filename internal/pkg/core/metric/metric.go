@@ -10,52 +10,30 @@ import (
 
 type Interface interface {
 	Inc(name string)
-	register(name string, help string)
+	Register(name string, help string)
 }
 
-func Instance() Interface {
-	return metrics
-}
-
-var metrics Interface
-
-type metricsStruct struct {
+type MetricsStruct struct {
 	m map[string]prometheus.Counter
 }
 
-func (c *metricsStruct) register(name string, help string) {
+func New() *MetricsStruct {
+	return &MetricsStruct{
+		m: map[string]prometheus.Counter{},
+	}
+}
+
+func (c *MetricsStruct) Register(name string, help string) {
 	c.m[name] = promauto.NewCounter(prometheus.CounterOpts{
 		Name: name,
 		Help: help,
 	})
 }
 
-func (c *metricsStruct) Inc(name string) {
+func (c *MetricsStruct) Inc(name string) {
 	if metric, ok := c.m[name]; ok {
 		metric.Inc()
 	} else {
 		logger.Logger.Sugar().Infof("metric '%s' is not registered", name)
 	}
-}
-
-func init() {
-	metrics = &metricsStruct{
-		m: map[string]prometheus.Counter{},
-	}
-	metrics.register(
-		"backup_req_in_ok",
-		"Total number of inbound requests to backup service that are succeeded",
-	)
-	metrics.register(
-		"backup_req_in_err",
-		"Total number of inbound requests to backup service that are failed",
-	)
-	metrics.register(
-		"backup_req_out_ok",
-		"Total number of outbound requests from backup service that are succeeded",
-	)
-	metrics.register(
-		"backup_req_out_err",
-		"Total number of outbound requests from backup service that are failed",
-	)
 }
