@@ -135,6 +135,7 @@ services:
       - type: bind
         source: ./docker/prometheus/prometheus.yml
         target: /etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     networks:
       - tasks-net
   kafka-ui:
@@ -198,6 +199,16 @@ services:
       - "11211:11211"
     networks:
       tasks-net:
+  grafana:
+    image: grafana/grafana:7.5.7
+    ports:
+      - "${GRAFANA_PORT}:3000"
+    restart: unless-stopped
+    volumes:
+      - ./docker/grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+    networks:
+      tasks-net:
 
 volumes:
   postgres-data:
@@ -209,6 +220,8 @@ volumes:
     driver: local
   zookeeper0_data:
   kafka0_data:
+  prometheus_data:
+  grafana_data:
 networks:
   tasks-net:
   graylog:
